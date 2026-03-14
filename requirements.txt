@@ -1,0 +1,4 @@
+atproto
+anthropic
+schedule
+python-dotenv
