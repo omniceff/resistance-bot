@@ -34,6 +34,11 @@ The character:
   Wordle or Cooper more than once every several posts.
 - Uses phrases like "This is not normal", "Stay mad", "We go high"
 - Never references posting a photo or image since she cannot attach them
+- Never start a post with "Just finished", "Just watched", "Reminder 
+  that", or "I miss" more than once in a while
+- Vary the format each time — sometimes a hot take, sometimes a 
+  memory, sometimes a reaction to the news, sometimes a mundane life 
+  update that turns political
 
 Write a single Bluesky post (max 290 characters) in this character's 
 voice. It should be funny because it's painfully authentic, not because 
@@ -55,7 +60,8 @@ The character replying:
 - Praises the original poster effusively if they seem vaguely liberal
 - Gently scolds if they seem "too far left" or "not helpful"
 - Uses phrases like "THIS", "Say it louder", "Thank you for saying this",
-  "We go high", "This is not normal"
+  "We go high", "This is not normal" but varies between them, necer repeating
+  the same thing in a row between posts
 - Is vaguely condescending toward third party voters or progressives
 - Never references posting a photo or image since she cannot attach them
 
@@ -83,26 +89,70 @@ SEARCH_TERMS = [
 ]
 
 replied_to = set()
+RECENT_POSTS_FILE = "recent_posts.txt"
+MAX_RECENT_POSTS = 5
+
+def save_recent_post(text):
+    """Save a post to the recent posts log."""
+    try:
+        with open(RECENT_POSTS_FILE, "a") as f:
+            f.write(text + "\n---\n")
+        # Keep only the last MAX_RECENT_POSTS posts
+        with open(RECENT_POSTS_FILE, "r") as f:
+            entries = f.read().split("\n---\n")
+        entries = [e for e in entries if e.strip()]
+        entries = entries[-MAX_RECENT_POSTS:]
+        with open(RECENT_POSTS_FILE, "w") as f:
+            f.write("\n---\n".join(entries) + "\n---\n")
+    except Exception as e:
+        print(f"  Could not save recent post: {e}")
+
+def load_recent_posts():
+    """Load recent posts from the log."""
+    try:
+        with open(RECENT_POSTS_FILE, "r") as f:
+            entries = f.read().split("\n---\n")
+        return [e.strip() for e in entries if e.strip()]
+    except FileNotFoundError:
+        return []
 claude = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 
 def generate_post():
+    recent = load_recent_posts()
+    if recent:
+        recent_context = "\n\nHere are your last few posts — do NOT repeat the same opening words, topics, or formats:\n"
+        recent_context += "\n".join(f"- {p}" for p in recent)
+    else:
+        recent_context = ""
+    
     message = claude.messages.create(
         model="claude-sonnet-4-20250514",
         max_tokens=300,
-        messages=[{"role": "user", "content": POST_PROMPT}]
+        messages=[{"role": "user", "content": POST_PROMPT + recent_context}]
     )
-    return message.content[0].text.strip()
+    text = message.content[0].text.strip()
+    save_recent_post(text)
+    return text
 
 
 def generate_reply(post_text):
-    prompt = REPLY_PROMPT.format(post_text=post_text)
+    recent = load_recent_posts()
+    if recent:
+        recent_context = "\n\nHere are your recent replies — do NOT start with the same words or phrases, especially avoid starting with 'THIS' or 'Thank you for saying this':\n"
+        recent_context += "\n".join(f"- {p}" for p in recent)
+    else:
+        recent_context = ""
+
+    prompt = REPLY_PROMPT.format(post_text=post_text) + recent_context
     message = claude.messages.create(
         model="claude-sonnet-4-20250514",
         max_tokens=300,
         messages=[{"role": "user", "content": prompt}]
     )
-    return message.content[0].text.strip()
+    text = message.content[0].text.strip()
+    save_recent_post(text)
+    return text
 
 
 def get_popular_posts(bsky_client, search_term, limit=10):
