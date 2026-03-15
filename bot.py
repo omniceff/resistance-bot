@@ -207,11 +207,17 @@ def find_post_to_reply_to(bsky_client):
 def post_original(bsky_client):
     print("📝 Generating original post...")
     try:
-        text = generate_post()
+        text = None
+        for attempt in range(3):
+            candidate = generate_post()
+            if len(candidate) <= 270:
+                text = candidate
+                break
+            print(f"  Post too long ({len(candidate)} chars), regenerating... (attempt {attempt + 1})")
         
-        # Trim to 270 characters if Claude went over
-        if len(text) > 270:
-            text = text[:267] + "..."
+        if not text:
+            print("❌ Could not generate a post under 270 chars after 3 attempts, skipping.\n")
+            return
         
         bsky_client.send_post(text=text)
         print(f"✅ Posted: {text}\n")
@@ -230,11 +236,17 @@ def post_reply(bsky_client):
         author = target.author.handle
         print(f"  Found post by @{author}: \"{original_text[:80]}...\"")
 
-        reply_text = generate_reply(original_text)
+        reply_text = None
+        for attempt in range(3):
+            candidate = generate_reply(original_text)
+            if len(candidate) <= 270:
+                reply_text = candidate
+                break
+            print(f"  Reply too long ({len(candidate)} chars), regenerating... (attempt {attempt + 1})")
         
-        # Trim to 270 characters if Claude went over
-        if len(reply_text) > 270:
-            reply_text = reply_text[:267] + "..."
+        if not reply_text:
+            print("❌ Could not generate a reply under 270 chars after 3 attempts, skipping.\n")
+            return
 
         reply_ref = {
             "root": {"uri": target.uri, "cid": target.cid},
