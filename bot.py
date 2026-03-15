@@ -2,6 +2,8 @@ import os
 import schedule
 import time
 import random
+from datetime import datetime
+import pytz
 from atproto import Client
 from atproto_client.models.app.bsky.feed.search_posts import Params as SearchParams
 import anthropic
@@ -40,8 +42,13 @@ The character:
   memory, sometimes a reaction to the news, sometimes a mundane life 
   update that turns political
 
-Write a single Bluesky post (max 290 characters) in this character's 
-voice. It should be funny because it's painfully authentic, not because 
+Write a single Bluesky post in this character's voice. Vary the 
+length naturally — sometimes just a sentence or two (120-150 
+characters), sometimes medium length (150-220 characters), and 
+occasionally longer (220-270 characters). Never always write the 
+maximum length. The length should feel organic, like a real person 
+posting, not like an AI trying to fill space. It should be funny because it's 
+painfully authentic, not because 
 it's winking at the audience. No hashtags. Just the post text, nothing else.
 """
 
@@ -60,15 +67,23 @@ The character replying:
 - Praises the original poster effusively if they seem vaguely liberal
 - Gently scolds if they seem "too far left" or "not helpful"
 - Uses phrases like "THIS", "Say it louder", "Thank you for saying this",
-  "We go high", "This is not normal" but varies between them, necer repeating
-  the same thing in a row between posts
+  "We go high", "This is not normal"
+- Varies her opening every single time — sometimes jumps straight 
+  into her point, sometimes addresses the poster directly, sometimes 
+  starts with a personal anecdote. Never starts with "THIS" or 
+  "Thank you for saying this" more than once in a while.
 - Is vaguely condescending toward third party voters or progressives
 - Never references posting a photo or image since she cannot attach them
 
 Someone posted this on Bluesky:
 "{post_text}"
 
-Write a single reply (max 280 characters) in this character's voice.
+Write a single Bluesky post in this character's voice. Vary the 
+length naturally — sometimes just a sentence or two (120-150 
+characters), sometimes medium length (150-220 characters), and 
+occasionally longer (220-270 characters). Never always write the 
+maximum length. The length should feel organic, like a real person 
+posting, not like an AI trying to fill space.
 It should feel authentic and slightly unhinged in a very suburban-liberal way.
 No hashtags. Just the reply text, nothing else. Don't be nasty and follow the rules.
 """
@@ -194,10 +209,13 @@ def post_original(bsky_client):
     print("📝 Generating original post...")
     try:
         text = generate_post()
+        
+        # Trim to 270 characters if Claude went over
+        if len(text) > 270:
+            text = text[:267] + "..."
+        
         bsky_client.send_post(text=text)
         print(f"✅ Posted: {text}\n")
-    except Exception as e:
-        print(f"❌ Failed to post: {e}\n")
 
 
 def post_reply(bsky_client):
@@ -212,6 +230,10 @@ def post_reply(bsky_client):
         print(f"  Found post by @{author}: \"{original_text[:80]}...\"")
 
         reply_text = generate_reply(original_text)
+        
+        # Trim to 270 characters if Claude went over
+        if len(reply_text) > 270:
+            reply_text = reply_text[:267] + "..."
 
         reply_ref = {
             "root": {"uri": target.uri, "cid": target.cid},
@@ -227,20 +249,57 @@ def post_reply(bsky_client):
         print(f"❌ Failed to reply: {e}\n")
 
 
+def is_quiet_hours():
+    """Return True if it's between 11pm and 7am Central time."""
+    central = pytz.timezone("America/Chicago")
+    now = datetime.now(central)
+    return now.hour < 7 or now.hour >= 23
+
 def run_original_post():
+    if is_quiet_hours():
+        print("🌙 Quiet hours — skipping original post.")
+        return
     bsky_client = Client()
     bsky_client.login(BLUESKY_HANDLE, BLUESKY_APP_PASSWORD)
     post_original(bsky_client)
 
 
 def run_reply():
+    if is_quiet_hours():
+        print("🌙 Quiet hours — skipping reply.")
+        return
     bsky_client = Client()
     bsky_client.login(BLUESKY_HANDLE, BLUESKY_APP_PASSWORD)
     post_reply(bsky_client)
 
 
-schedule.every(1).hours.do(run_original_post)
-schedule.every(30).minutes.do(run_reply)
+def schedule_next_post():
+    """Schedule the next original post with a random variance."""
+    variance = random.randint(-8, 8)
+    delay = 60 + variance
+    schedule.every(delay).minutes.do(run_and_reschedule_post)
+
+def run_and_reschedule_post():
+    run_original_post()
+    schedule.clear('original_post')
+    variance = random.randint(-8, 8)
+    delay = 60 + variance
+    schedule.every(delay).minutes.tag('original_post').do(run_and_reschedule_post)
+
+def run_and_reschedule_reply():
+    run_reply()
+    run_reply()
+    schedule.clear('reply')
+    variance = random.randint(-8, 8)
+    delay = 30 + variance
+    schedule.every(delay).minutes.tag('reply').do(run_and_reschedule_reply)
+
+# Initial scheduling with random variance
+variance = random.randint(-8, 8)
+schedule.every(60 + variance).minutes.tag('original_post').do(run_and_reschedule_post)
+
+variance = random.randint(-8, 8)
+schedule.every(30 + variance).minutes.tag('reply').do(run_and_reschedule_reply)
 
 print("🌊 Resistance bot starting...\n")
 run_original_post()
