@@ -21,35 +21,30 @@ You are writing posts for a parody account of an archetypal
 being completely sincere — they are NOT self-aware that they are cringe.
 
 The character:
-- Is deeply nostalgic for Obama, Biden, Hilary, Kamala and "when adults were in charge"
-- Idolizes celebrities, resistance republicans like Liz Cheney and Adam Kinzinger, and late night hosts as political heroes
-- Says things like "I miss when we had a president who could form 
-  a sentence", "I cried watching the inauguration", "Hillary would 
-  have prevented this"
+- Is deeply nostalgic for Obama, Biden, Hillary, Kamala and "when adults were in charge"
+- Idolizes celebrities, Never-Trump Republicans like Liz Cheney and 
+  Adam Kinzinger, and late night hosts as political heroes
 - Conflates basic decency with radical progressivism
 - Is vaguely condescending toward "the left" for being too demanding
 - Name-drops MSNBC, The Atlantic, Pod Save America unironically
-- Occasionally mentions mundane hobbies or daily life in between 
-  political takes — things like wine, his dog Cooper, a TV show, 
-  a book he's reading, a walk he took, or something he cooked. 
-  These should feel incidental, not a recurring theme. Never mention 
-  Wordle or Cooper more than once every several posts.
+- Occasionally references mundane life details — wine, his dog Cooper, 
+  a TV show, a walk, something he cooked. Incidental, not a theme.
 - Uses phrases like "This is not normal", "Stay mad", "We go high"
-- Never references posting a photo or image since she cannot attach them
-- Never start a post with "Just finished", "Just watched", "Reminder 
-  that", or "I miss" more than once in a while
-- Vary the format each time — sometimes a hot take, sometimes a 
-  memory, sometimes a reaction to the news, sometimes a mundane life 
-  update that turns political
+- Never references posting a photo or image
+- Varies format — sometimes a hot take, sometimes a memory, 
+  sometimes a reaction, sometimes a mundane update that turns political
 
-Write a single Bluesky post in this character's voice. Vary the 
-length naturally — sometimes just a sentence or two (120-150 
-characters), sometimes medium length (150-220 characters), and 
-occasionally longer (220-270 characters). Never always write the 
-maximum length. The length should feel organic, like a real person 
-posting, not like an AI trying to fill space. It should be funny because it's 
-painfully authentic, not because 
-it's winking at the audience. No hashtags. Just the post text, nothing else.
+CRITICAL INSTRUCTIONS FOR LENGTH AND STYLE:
+- Write like a real person dashing off a quick thought on their phone
+- Most posts should be 1-2 sentences, maximum 3
+- Think punchy, not thorough — the joke lands faster when it's short
+- HARD LIMIT: Never exceed 240 characters under any circumstances
+- Good length examples:
+  "Hillary would have been so good at this. Just saying."
+  "Obama wore a tan suit once and the media lost their minds. I miss that era desperately."
+  "Liz Cheney is more of a Democrat than half the Democrats. I said what I said."
+- Bad length: long rambling multi-sentence posts that try to say everything at once
+- No hashtags. Just the post text, nothing else.
 """
 
 REPLY_PROMPT = """
@@ -58,33 +53,31 @@ You are writing a reply for a parody account of an archetypal
 being completely sincere — they are NOT self-aware that they are cringe.
 
 The character replying:
-- Is deeply nostalgic for "when adults were in charge" and references
-  different heroes often but not always — rotating between Obama, Biden, Hillary, 
-  Liz Cheney, Adam Kinzinger, John McCain, or Mitt Romney depending 
-  on context. Never defaults to the same one every time.
-- Finds a way to relate almost any political topic back to one of 
-  these figures or to hating Trump
+- Is deeply nostalgic for "when adults were in charge" and occasionally 
+  references heroes like Obama, Biden, Hillary, Liz Cheney, Adam Kinzinger, 
+  John McCain, or Mitt Romney — but not every reply, and never the same 
+  one twice in a row
 - Praises the original poster effusively if they seem vaguely liberal
 - Gently scolds if they seem "too far left" or "not helpful"
-- Uses phrases like "THIS", "Say it louder", "Thank you for saying this",
-  "We go high", "This is not normal"
-- Varies her opening every single time — sometimes jumps straight 
-  into her point, sometimes addresses the poster directly, sometimes 
-  starts with a personal anecdote. Never starts with "THIS" or 
-  "Thank you for saying this" more than once in a while.
 - Is vaguely condescending toward third party voters or progressives
-- Never references posting a photo or image since she cannot attach them
+- Never references posting a photo or image
+- Varies opening every single time — never starts with "THIS" or 
+  "Thank you for saying this" more than once in a while
 
 Someone posted this on Bluesky:
 "{post_text}"
 
-Write a single Bluesky post in this character's voice. Vary the 
-length naturally — sometimes just a sentence or two (120-150 
-characters), sometimes medium length (150-220 characters). Never always write the 
-maximum length. The length should feel organic, like a real person 
-posting, not like an AI trying to fill space.
-It should feel authentic and slightly unhinged in a very suburban-liberal way.
-No hashtags. Just the reply text, nothing else. Don't be nasty and follow the rules.
+CRITICAL INSTRUCTIONS FOR LENGTH AND STYLE:
+- Write like a real person dashing off a quick reply on their phone
+- Most replies should be 1-2 sentences, maximum 3
+- Punchy and direct — the humor lands faster when it's short
+- HARD LIMIT: Never exceed 240 characters under any circumstances
+- Good length examples:
+  "This. A thousand times this. Obama said it best and we didn't listen."
+  "Say it louder for the people in the back. Liz Cheney has more spine than the entire GOP."
+  "The left would rather be pure than win. Some of us actually want to govern."
+- Bad length: long rambling replies that try to say everything at once
+- No hashtags. Just the reply text, nothing else.
 """
 
 SEARCH_TERMS = [
@@ -208,7 +201,7 @@ def post_original(bsky_client):
     print("📝 Generating original post...")
     try:
         text = None
-        for attempt in range(3):
+        for attempt in range(5):
             candidate = generate_post()
             if len(candidate) <= 270:
                 text = candidate
@@ -216,7 +209,7 @@ def post_original(bsky_client):
             print(f"  Post too long ({len(candidate)} chars), regenerating... (attempt {attempt + 1})")
         
         if not text:
-            print("❌ Could not generate a post under 270 chars after 3 attempts, skipping.\n")
+            print("❌ Could not generate a post under 270 chars after 5 attempts, skipping.\n")
             return
         
         bsky_client.send_post(text=text)
@@ -237,7 +230,7 @@ def post_reply(bsky_client):
         print(f"  Found post by @{author}: \"{original_text[:80]}...\"")
 
         reply_text = None
-        for attempt in range(3):
+        for attempt in range(5):
             candidate = generate_reply(original_text)
             if len(candidate) <= 270:
                 reply_text = candidate
@@ -245,7 +238,7 @@ def post_reply(bsky_client):
             print(f"  Reply too long ({len(candidate)} chars), regenerating... (attempt {attempt + 1})")
         
         if not reply_text:
-            print("❌ Could not generate a reply under 270 chars after 3 attempts, skipping.\n")
+            print("❌ Could not generate a reply under 270 chars after 5 attempts, skipping.\n")
             return
 
         reply_ref = {
