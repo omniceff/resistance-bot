@@ -80,8 +80,7 @@ Someone posted this on Bluesky:
 
 Write a single Bluesky post in this character's voice. Vary the 
 length naturally — sometimes just a sentence or two (120-150 
-characters), sometimes medium length (150-220 characters), and 
-occasionally longer (220-270 characters). Never always write the 
+characters), sometimes medium length (150-220 characters). Never always write the 
 maximum length. The length should feel organic, like a real person 
 posting, not like an AI trying to fill space.
 It should feel authentic and slightly unhinged in a very suburban-liberal way.
