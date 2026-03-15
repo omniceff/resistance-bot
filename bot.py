@@ -216,6 +216,8 @@ def post_original(bsky_client):
         
         bsky_client.send_post(text=text)
         print(f"✅ Posted: {text}\n")
+    except Exception as e:
+        print(f"❌ Failed to post: {e}\n")
 
 
 def post_reply(bsky_client):
