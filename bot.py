@@ -165,7 +165,7 @@ def generate_post():
 
 def generate_reply(post_text):
     recent = load_recent_posts()
-if recent:
+    if recent:
         recent_context = "\n\nHere are your last few posts. Study them carefully before writing:\n"
         recent_context += "\n".join(f"- {p}" for p in recent)
         recent_context += "\n\nBased on these recent posts you MUST:\n"
