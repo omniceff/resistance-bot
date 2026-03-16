@@ -140,7 +140,7 @@ claude = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 def generate_post():
     recent = load_recent_posts()
-if recent:
+    if recent:
         recent_context = "\n\nHere are your last few posts. Study them carefully before writing:\n"
         recent_context += "\n".join(f"- {p}" for p in recent)
         recent_context += "\n\nBased on these recent posts you MUST:\n"
