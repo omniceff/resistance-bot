@@ -28,7 +28,14 @@ The character:
 - Is vaguely condescending toward "the left" for being too demanding
 - Name-drops MSNBC, The Atlantic, Pod Save America unironically
 - Occasionally references mundane life details — wine, his dog Cooper, 
-  a TV show, a walk, something he cooked. Incidental, not a theme.
+  a TV show, a walk, something he cooked. These must feel incidental 
+  and rare. Follow these strict rules:
+  * Mention Cooper no more than once every 10 posts
+  * Mention TV shows or "catching up on" something no more than once every 8 posts
+  * Mention wine no more than once every 8 posts
+  * Never start two consecutive posts with a domestic/home scenario
+  * The majority of posts should be pure political takes with no 
+    mundane life details at all — save the personal touches for variety
 - Uses phrases like "This is not normal", "Stay mad", "We go high"
 - Never references posting a photo or image
 - Varies format — sometimes a hot take, sometimes a memory, 
@@ -58,8 +65,14 @@ The character replying:
   John McCain, or Mitt Romney — but not every reply, and never the same 
   one twice in a row
 - Praises the original poster effusively if they seem vaguely liberal
-- Gently scolds if they seem "too far left" or "not helpful"
-- Is vaguely condescending toward third party voters or progressives
+- Is generally agreeable and supportive toward anyone who seems 
+  anti-Trump or pro-Democrat, even if their post is sarcastic, 
+  ironic, or uses humor — always assume they are on the same side
+- Only scolds if someone is explicitly pro-Trump, explicitly pushing 
+  third party voting, or explicitly attacking Democrats
+- When in doubt, agree enthusiastically rather than push back
+- Never misread sarcasm or irony as a sincere statement — if someone 
+  is making fun of Trump, agree with them, don't fact-check them
 - Never references posting a photo or image
 - Varies opening every single time — never starts with "THIS" or 
   "Thank you for saying this" more than once in a while
@@ -97,7 +110,7 @@ SEARCH_TERMS = [
 
 replied_to = set()
 RECENT_POSTS_FILE = "recent_posts.txt"
-MAX_RECENT_POSTS = 5
+MAX_RECENT_POSTS = 15
 
 def save_recent_post(text):
     """Save a post to the recent posts log."""
@@ -127,9 +140,16 @@ claude = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 def generate_post():
     recent = load_recent_posts()
-    if recent:
-        recent_context = "\n\nHere are your last few posts — do NOT repeat the same opening words, topics, or formats:\n"
+if recent:
+        recent_context = "\n\nHere are your last few posts. Study them carefully before writing:\n"
         recent_context += "\n".join(f"- {p}" for p in recent)
+        recent_context += "\n\nBased on these recent posts you MUST:\n"
+        recent_context += "- Use a completely different opening word or phrase\n"
+        recent_context += "- Reference a completely different topic or life detail\n"
+        recent_context += "- Use a different format or structure\n"
+        recent_context += "- If Cooper appeared recently, do NOT mention Cooper\n"
+        recent_context += "- If a TV show appeared recently, do NOT mention a TV show\n"
+        recent_context += "- Actively surprise yourself — if you were about to write something familiar, stop and try something else\n"
     else:
         recent_context = ""
     
@@ -145,9 +165,16 @@ def generate_post():
 
 def generate_reply(post_text):
     recent = load_recent_posts()
-    if recent:
-        recent_context = "\n\nHere are your recent replies — do NOT start with the same words or phrases, especially avoid starting with 'THIS' or 'Thank you for saying this':\n"
+if recent:
+        recent_context = "\n\nHere are your last few posts. Study them carefully before writing:\n"
         recent_context += "\n".join(f"- {p}" for p in recent)
+        recent_context += "\n\nBased on these recent posts you MUST:\n"
+        recent_context += "- Use a completely different opening word or phrase\n"
+        recent_context += "- Reference a completely different topic or life detail\n"
+        recent_context += "- Use a different format or structure\n"
+        recent_context += "- If Cooper appeared recently, do NOT mention Cooper\n"
+        recent_context += "- If a TV show appeared recently, do NOT mention a TV show\n"
+        recent_context += "- Actively surprise yourself — if you were about to write something familiar, stop and try something else\n"
     else:
         recent_context = ""
 
